@@ -21,50 +21,49 @@
 </head>
 <body class="bg-gray-50 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 sm:p-6 transition-colors duration-300">
 
-    <div class="max-w-md mx-auto space-y-5">
+    <div class="max-w-md mx-auto space-y-4">
         
         <!-- 头部：标题与模式切换 -->
         <div class="flex justify-between items-center px-1">
             <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">Rolling-Wallet</h1>
-            <!-- 手机端手动切换日间/夜间按钮 -->
-            <button onclick="toggleDarkMode()" class="text-xs px-3 py-1 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
+            <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
                 ☀️ / 🌙
             </button>
         </div>
 
-        <!-- 头部资产总额面板 -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-            <div class="text-xs text-gray-400 mb-1">Left Balance (剩余总额)</div>
-            <div class="flex items-center justify-between">
-                <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
-                    RM 0.00
-                </div>
-                <div class="flex items-center space-x-3 text-lg">
+        <!-- 头部资产总额面板 (优化布局，确保眼睛和铅笔绝对可点) -->
+        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+            <div class="flex justify-between items-center">
+                <div class="text-xs text-gray-400">Left Balance (剩余总额)</div>
+                <div class="flex items-center space-x-2">
                     <!-- 眼睛图标：切换隐私屏蔽 -->
-                    <button id="toggle-mask" onclick="toggleMask()" class="text-gray-400 hover:text-gray-600 focus:outline-none">👁️</button>
+                    <button id="toggle-mask" onclick="toggleMask()" class="px-2.5 py-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-lg text-base active:scale-95 transition-transform">👁️</button>
                     <!-- 小铅笔：修改初始本金 -->
-                    <button onclick="editInitialBalance()" class="text-gray-400 hover:text-gray-600 focus:outline-none">✏️</button>
+                    <button onclick="editInitialBalance()" class="px-2.5 py-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-lg text-base active:scale-95 transition-transform">✏️</button>
                 </div>
+            </div>
+            <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
+                RM 0.00
             </div>
         </div>
 
         <!-- 添加流水表单 -->
         <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
             <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">添加新流水</div>
-            <input type="text" id="item-name" placeholder="项目名称 (e.g. 咖啡)" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+            <input type="text" id="item-name" placeholder="项目名称 (e.g. 咖啡)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
             <div class="flex space-x-2">
-                <input type="number" id="item-amount" placeholder="金额 (e.g. 3000)" class="w-1/2 px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                <select id="item-type" class="w-1/2 px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                <input type="number" id="item-amount" placeholder="金额 (e.g. 3000)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
                     <option value="spend">支出 (Spend -)</option>
                     <option value="gain">收入 (Gain +)</option>
                 </select>
             </div>
-            <!-- 新增：支持自选日期 -->
+            <!-- 日期选择：与下方日历联动 -->
             <div class="flex items-center space-x-2">
                 <span class="text-xs text-gray-400">日期:</span>
-                <input type="date" id="item-date" class="w-full px-3 py-2 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
+                <input type="date" id="item-date" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
             </div>
-            <button onclick="addItem()" class="w-full py-3 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
+            <button onclick="addItem()" class="w-full py-3.5 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
                 确认添加
             </button>
         </div>
@@ -73,14 +72,13 @@
         <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
             <div class="flex justify-between items-center">
                 <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">流水明细与日历筛选</div>
-                <!-- 按日期筛选 -->
                 <div class="flex items-center space-x-1">
-                    <input type="date" id="filter-date" onchange="renderTransactions()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
-                    <button onclick="clearFilter()" class="text-xs text-gold-light dark:text-gold-dark px-1">重置</button>
+                    <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2.5 py-1.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
+                    <button onclick="clearFilter()" class="text-xs text-gold-light dark:text-gold-dark px-1.5 py-1">重置</button>
                 </div>
             </div>
             
-            <div id="transaction-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <div id="transaction-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                 <!-- 动态生成的列表项 -->
             </div>
         </div>
@@ -89,13 +87,14 @@
 
     <!-- JavaScript 核心逻辑 -->
     <script>
-        // 初始化数据
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
 
-        // 页面加载完成后自动填入今天的日期
-        document.getElementById('item-date').valueAsDate = new Date();
+        // 初始化日期设为今天
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('item-date').value = todayStr;
+        document.getElementById('filter-date').value = todayStr;
 
         function saveData() {
             localStorage.setItem('rw_initial', initialBalance);
@@ -106,7 +105,7 @@
         // 修改初始本金
         function editInitialBalance() {
             let val = prompt("请输入您的初始总金额 (Left Balance):", initialBalance);
-            if (val !== null && !isNaN(val)) {
+            if (val !== null && val.trim() !== "" && !isNaN(val)) {
                 initialBalance = parseFloat(val);
                 saveData();
             }
@@ -116,18 +115,28 @@
         function toggleMask() {
             isMasked = !isMasked;
             document.getElementById('toggle-mask').textContent = isMasked ? '🔒' : '👁️';
-            renderTransactions(); // 重新渲染以更新总额显示
+            renderTransactions();
+        }
+
+        // 下方日历改变时，上方添加流水的日期自动联动切换
+        function onFilterDateChange() {
+            let selectedDate = document.getElementById('filter-date').value;
+            if (selectedDate) {
+                document.getElementById('item-date').value = selectedDate;
+            }
+            renderTransactions();
         }
 
         // 添加流水
         function addItem() {
             let name = document.getElementById('item-name').value.trim();
-            let amount = parseFloat(document.getElementById('item-amount').value);
+            let amountStr = document.getElementById('item-amount').value;
+            let amount = parseFloat(amountStr);
             let type = document.getElementById('item-type').value;
             let date = document.getElementById('item-date').value;
 
             if (!name || isNaN(amount) || amount <= 0) {
-                alert("请输入有效的项目名称和金额！");
+                alert("请输入有效的项目名称和大于0的金额！");
                 return;
             }
 
@@ -136,7 +145,100 @@
                 name,
                 amount,
                 type,
-                date: date || new Date().toISOString().split('T')[0]
+                date: date || todayStr
             };
 
-            transactions.unshift.call(transactions, newItem); // 加
+            transactions.unshift(newItem); // 修复数组添加方法
+            
+            // 清空输入框
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-amount').value = '';
+            
+            saveData();
+        }
+
+        // 删除流水
+        function deleteItem(id) {
+            transactions = transactions.filter(item => item.id !== id);
+            saveData();
+        }
+
+        // 清除日历筛选
+        function clearFilter() {
+            document.getElementById('filter-date').value = todayStr;
+            document.getElementById('item-date').value = todayStr;
+            renderTransactions();
+        }
+
+        // 渲染页面与计算总额
+        function renderTransactions() {
+            let listContainer = document.getElementById('transaction-list');
+            let filterDate = document.getElementById('filter-date').value;
+            
+            listContainer.innerHTML = '';
+
+            // 计算当前总额：初始本金 + 所有收入 - 所有支出
+            let currentBalance = initialBalance;
+            transactions.forEach(item => {
+                if (item.type === 'gain') {
+                    currentBalance += item.amount;
+                } else {
+                    currentBalance -= item.amount;
+                }
+            });
+
+            // 更新显示总额
+            let displayBalanceEl = document.getElementById('balance-display');
+            if (isMasked) {
+                displayBalanceEl.textContent = 'RM ••••••';
+            } else {
+                displayBalanceEl.textContent = `RM ${currentBalance.toFixed(2)}`;
+            }
+
+            // 筛选流水
+            let filteredList = transactions;
+            if (filterDate) {
+                filteredList = transactions.filter(item => item.date === filterDate);
+            }
+
+            if (filteredList.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">当天暂无流水记录</div>`;
+                return;
+            }
+
+            // 生成列表
+            filteredList.forEach(item => {
+                let isGain = item.type === 'gain';
+                let div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
+                div.innerHTML = `
+                    <div class="space-y-0.5">
+                        <div class="font-medium">${item.name}</div>
+                        <div class="text-[10px] text-gray-400">${item.date}</div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
+                            ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
+                        </span>
+                        <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1">🗑️</button>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        // 手机端手动日间/夜间切换
+        function toggleDarkMode() {
+            let html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+            } else {
+                html.classList.add('dark');
+            }
+        }
+
+        // 初始化首次渲染
+        renderTransactions();
+    </script>
+</body>
+</html>

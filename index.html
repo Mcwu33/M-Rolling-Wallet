@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rolling-Wallet</title>
+    
+    <!-- 🌟 核心：为 Rolling-Wallet 自定义网页标签及手机桌面图标 (换成钱包图标) -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/money-bag.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/money-bag.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -74,9 +79,7 @@
             <div class="flex justify-between items-center">
                 <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
                 <div class="flex items-center space-x-2">
-                    <!-- 日历输入框：让用户自由选择查看某天 -->
                     <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
-                    <!-- 核心按钮：Show All 查看全部历史账单，彻底告别死板日期卡顿 -->
                     <button onclick="showAllHistoryRecords()" class="text-xs bg-gold-light/20 text-gold-light dark:text-gold-dark px-2 py-1 rounded-lg font-medium active:scale-95 transition-transform">
                         All
                     </button>
@@ -98,9 +101,8 @@
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
-        let viewingAll = true; // 默认进来展示全部历史，防止被单日卡住
+        let viewingAll = true;
 
-        // 严格获取本地真实日期的函数 (YYYY-MM-DD)
         function getRealToday() {
             let now = new Date();
             let year = now.getFullYear();
@@ -109,7 +111,6 @@
             return `${year}-${month}-${day}`;
         }
 
-        // 页面首次加载
         window.onload = function() {
             let today = getRealToday();
             document.getElementById('item-date').value = today;
@@ -123,7 +124,6 @@
             render();
         }
 
-        // 跨月自动滚雪球检测
         function checkMonthlyRollover() {
             if (transactions.length === 0) return;
             let today = getRealToday();
@@ -159,7 +159,6 @@
             }
         }
 
-        // 修改初始本金
         function editInitialBalance() {
             let val = prompt("Enter your initial base balance:", initialBalance);
             if (val !== null && val.trim() !== "" && !isNaN(val)) {
@@ -168,30 +167,26 @@
             }
         }
 
-        // 切换隐私遮挡
         function toggleMask() {
             isMasked = !isMasked;
             document.getElementById('eye-btn').textContent = isMasked ? '🔒 Show' : '👁️ Hide';
             render();
         }
 
-        // 当用户在日历里选择某一天时触发
         function onFilterDateChange() {
-            viewingAll = false; // 切换为单日筛选模式
+            viewingAll = false;
             let selectedDate = document.getElementById('filter-date').value;
             if (selectedDate) {
-                document.getElementById('item-date').value = selectedDate; // 上方添加流水同步到该日期
+                document.getElementById('item-date').value = selectedDate;
             }
             render();
         }
 
-        // 点击 "All" 按钮：查看全部历史记录
         function showAllHistoryRecords() {
             viewingAll = true;
             render();
         }
 
-        // 点击 "Today" 按钮：快速切回今天
         function resetToToday() {
             let realToday = getRealToday();
             document.getElementById('filter-date').value = realToday;
@@ -200,7 +195,6 @@
             render();
         }
 
-        // 添加流水
         function addItem() {
             let name = document.getElementById('item-name').value.trim();
             let amount = parseFloat(document.getElementById('item-amount').value);
@@ -225,7 +219,6 @@
             saveData();
         }
 
-        // 修改单条流水金额
         function editItemAmount(id) {
             let item = transactions.find(t => t.id === id);
             if (!item) return;
@@ -242,30 +235,25 @@
             }
         }
 
-        // 删除流水
         function deleteItem(id) {
             transactions = transactions.filter(item => item.id !== id);
             saveData();
         }
 
-        // 主渲染逻辑
         function render() {
             let listContainer = document.getElementById('transaction-list');
             let filterDate = document.getElementById('filter-date').value;
             listContainer.innerHTML = '';
 
-            // 1. 计算总额
             let currentBalance = initialBalance;
             transactions.forEach(t => {
                 if (t.type === 'gain') currentBalance += t.amount;
                 else currentBalance -= t.amount;
             });
 
-            // 2. 显示总额
             let displayBalanceEl = document.getElementById('balance-display');
             displayBalanceEl.textContent = isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`;
 
-            // 3. 过滤显示列表：如果 viewingAll 为 true 则显示全部，否则按 filterDate 筛选
             let filtered = viewingAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);
 
             if (filtered.length === 0) {
@@ -273,7 +261,6 @@
                 return;
             }
 
-            // 4. 渲染列表项
             filtered.forEach(item => {
                 let isGain = item.type === 'gain';
                 let div = document.createElement('div');

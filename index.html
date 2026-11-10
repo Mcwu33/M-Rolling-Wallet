@@ -131,4 +131,120 @@
 
         // Add Transaction
         function addItem() {
-            let
+            let name = document.getElementById('item-name').value.trim();
+            let amount = parseFloat(document.getElementById('item-amount').value);
+            let type = document.getElementById('item-type').value;
+            let date = document.getElementById('item-date').value;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid item name and amount greater than 0!");
+                return;
+            }
+
+            let newItem = {
+                id: Date.now(),
+                name,
+                amount,
+                type,
+                date: date || todayStr
+            };
+
+            transactions.unshift(newItem);
+            
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-amount').value = '';
+            
+            saveData();
+        }
+
+        // Edit Specific Transaction Amount
+        function editItemAmount(id) {
+            let item = transactions.find(t => t.id === id);
+            if (!item) return;
+
+            let val = prompt(`Edit amount for "${item.name}":`, item.amount);
+            if (val !== null && val.trim() !== "" && !isNaN(val)) {
+                let newAmount = parseFloat(val);
+                if (newAmount > 0) {
+                    item.amount = newAmount;
+                    saveData();
+                } else {
+                    alert("Amount must be greater than 0!");
+                }
+            }
+        }
+
+        // Delete Transaction
+        function deleteItem(id) {
+            transactions = transactions.filter(item => item.id !== id);
+            saveData();
+        }
+
+        // Reset Filter
+        function clearFilter() {
+            document.getElementById('filter-date').value = todayStr;
+            document.getElementById('item-date').value = todayStr;
+            render();
+        }
+
+        // Render Dashboard
+        function render() {
+            let listContainer = document.getElementById('transaction-list');
+            let filterDate = document.getElementById('filter-date').value;
+            
+            listContainer.innerHTML = '';
+
+            let currentBalance = initialBalance;
+            transactions.forEach(item => {
+                if (item.type === 'gain') {
+                    currentBalance += item.amount;
+                } else {
+                    currentBalance -= item.amount;
+                }
+            });
+
+            let displayBalanceEl = document.getElementById('balance-display');
+            if (isMasked) {
+                displayBalanceEl.textContent = 'RM ••••••';
+            } else {
+                displayBalanceEl.textContent = `RM ${currentBalance.toFixed(2)}`;
+            }
+
+            let filtered = filterDate ? transactions.filter(item => item.date === filterDate) : transactions;
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records for this date</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let isGain = item.type === 'gain';
+                let div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
+                div.innerHTML = `
+                    <div class="space-y-0.5">
+                        <div class="font-medium">${item.name}</div>
+                        <div class="text-[10px] text-gray-400">${item.date}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
+                            ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
+                        </span>
+                        <!-- Edit Button -->
+                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit Amount">✏️</button>
+                        <!-- Delete Button -->
+                        <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1" title="Delete">🗑️</button>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        render();
+    </script>
+</body>
+</html>

@@ -23,7 +23,7 @@
 
     <div class="max-w-md mx-auto space-y-4">
         
-        <!-- Header: Title & Theme Toggle -->
+        <!-- Header -->
         <div class="flex justify-between items-center px-1">
             <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">Rolling-Wallet</h1>
             <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
@@ -35,7 +35,6 @@
         <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
             <div class="flex justify-between items-center">
                 <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance</span>
-                <!-- Eye & Edit Initial Balance Buttons -->
                 <div class="flex items-center space-x-2">
                     <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
                         👁️ Hide
@@ -75,9 +74,8 @@
             <div class="flex justify-between items-center">
                 <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
                 <div class="flex items-center space-x-1">
-                    <!-- 加上了 forceShowAll 参数，点 Reset 时显示全部历史记录，不再被单日死死卡住 -->
                     <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2.5 py-1.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
-                    <button onclick="clearFilter()" class="text-xs text-gold-light dark:text-gold-dark px-1.5 py-1">Reset</button>
+                    <button onclick="resetToToday()" class="text-xs text-gold-light dark:text-gold-dark px-1.5 py-1">Reset</button>
                 </div>
             </div>
             
@@ -88,72 +86,75 @@
 
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- Core JavaScript -->
     <script>
+        // 获取本地存储或默认值
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
-        let showAllHistory = false; // 新增控制开关：Reset 后显示全部流水
 
-        // 动态获取手机当前实时日期的函数
-        function getTodayStr() {
-            return new Date().toISOString().split('T')[0];
+        // 获取手机实时日期的标准方法 (YYYY-MM-DD)
+        function getRealToday() {
+            let now = new Date();
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, '0');
+            let day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
-        // 初始化日期设为今天
-        document.getElementById('item-date').value = getTodayStr();
-        document.getElementById('filter-date').value = getTodayStr();
+        // 初始化时，把日历和表单填入当前真实日期
+        window.onload = function() {
+            let today = getRealToday();
+            document.getElementById('item-date').value = today;
+            document.getElementById('filter-date').value = today;
+            checkMonthlyRollover();
+            render();
+        };
 
-        // 自动检测跨月结转逻辑
-        function checkMonthlyRollover() {
-            if (transactions.length === 0) return;
-
-            let todayStr = getTodayStr();
-            let currentYearMonth = todayStr.substring(0, 7);
-            let lastCheckedMonth = localStorage.getItem('rw_last_month') || currentYearMonth;
-
-            if (currentYearMonth > lastCheckedMonth) {
-                let prevBalance = initialBalance;
-                transactions.forEach(t => {
-                    if (t.date.startsWith(lastCheckedMonth)) {
-                        if (t.type === 'gain') prevBalance += t.amount;
-                        else prevBalance -= t.amount;
-                    }
-                });
-
-                if (prevBalance > 0) {
-                    let rolloverDate = currentYearMonth + "-01";
-                    let exists = transactions.some(t => t.date === rolloverDate && t.name.includes("Previous Month Rollover"));
-                    if (!exists) {
-                        let rolloverItem = {
-                            id: Date.now(),
-                            name: `Previous Month Rollover (${lastCheckedMonth})`,
-                            amount: prevBalance,
-                            type: 'gain',
-                            date: rolloverDate
-                        };
-                        transactions.unshift(rolloverItem);
-                    }
-                }
-                localStorage.setItem('rw_last_month', currentYearMonth);
-                saveDataWithoutRolloverCheck();
-            } else {
-                localStorage.setItem('rw_last_month', currentYearMonth);
-            }
-        }
-
+        // 核心保存与渲染
         function saveData() {
             localStorage.setItem('rw_initial', initialBalance);
             localStorage.setItem('rw_transactions', JSON.stringify(transactions));
             render();
         }
 
-        function saveDataWithoutRolloverCheck() {
-            localStorage.setItem('rw_initial', initialBalance);
-            localStorage.setItem('rw_transactions', JSON.stringify(transactions));
+        // 跨月自动滚雪球检测
+        function checkMonthlyRollover() {
+            if (transactions.length === 0) return;
+            let today = getRealToday();
+            let currentMonth = today.substring(0, 7);
+            let lastMonth = localStorage.getItem('rw_last_month') || currentMonth;
+
+            if (currentMonth > lastMonth) {
+                let prevBalance = initialBalance;
+                transactions.forEach(t => {
+                    if (t.date.startsWith(lastMonth)) {
+                        if (t.type === 'gain') prevBalance += t.amount;
+                        else prevBalance -= t.amount;
+                    }
+                });
+
+                if (prevBalance > 0) {
+                    let rolloverDate = currentMonth + "-01";
+                    let exists = transactions.some(t => t.date === rolloverDate && t.name.includes("Rollover"));
+                    if (!exists) {
+                        transactions.unshift({
+                            id: Date.now(),
+                            name: `Previous Month Rollover (${lastMonth})`,
+                            amount: prevBalance,
+                            type: 'gain',
+                            date: rolloverDate
+                        });
+                    }
+                }
+                localStorage.setItem('rw_last_month', currentMonth);
+                localStorage.setItem('rw_transactions', JSON.stringify(transactions));
+            } else {
+                localStorage.setItem('rw_last_month', currentMonth);
+            }
         }
 
-        // Edit Initial Balance
+        // 铅笔：改初始本金
         function editInitialBalance() {
             let val = prompt("Enter your initial base balance:", initialBalance);
             if (val !== null && val.trim() !== "" && !isNaN(val)) {
@@ -162,17 +163,15 @@
             }
         }
 
-        // Toggle Mask
+        // 眼睛：切换隐私遮挡
         function toggleMask() {
             isMasked = !isMasked;
-            let btn = document.getElementById('eye-btn');
-            btn.textContent = isMasked ? '🔒 Show' : '👁️ Hide';
+            document.getElementById('eye-btn').textContent = isMasked ? '🔒 Show' : '👁️ Hide';
             render();
         }
 
-        // Calendar Date Sync
+        // 日历变动联动上方表单
         function onFilterDateChange() {
-            showAllHistory = false; // 用户手动选日期时，取消显示全部
             let selectedDate = document.getElementById('filter-date').value;
             if (selectedDate) {
                 document.getElementById('item-date').value = selectedDate;
@@ -180,7 +179,7 @@
             render();
         }
 
-        // Add Transaction
+        // 添加流水
         function addItem() {
             let name = document.getElementById('item-name').value.trim();
             let amount = parseFloat(document.getElementById('item-amount').value);
@@ -188,27 +187,24 @@
             let date = document.getElementById('item-date').value;
 
             if (!name || isNaN(amount) || amount <= 0) {
-                alert("Please enter a valid item name and amount greater than 0!");
+                alert("Please enter a valid item name and amount > 0!");
                 return;
             }
 
-            let newItem = {
+            transactions.unshift({
                 id: Date.now(),
                 name,
                 amount,
                 type,
-                date: date || getTodayStr()
-            };
+                date: date || getRealToday()
+            });
 
-            transactions.unshift(newItem);
-            
             document.getElementById('item-name').value = '';
             document.getElementById('item-amount').value = '';
-            
             saveData();
         }
 
-        // Edit Specific Transaction Amount
+        // 修改单条流水金额
         function editItemAmount(id) {
             let item = transactions.find(t => t.id === id);
             if (!item) return;
@@ -220,51 +216,44 @@
                     item.amount = newAmount;
                     saveData();
                 } else {
-                    alert("Amount must be greater than 0!");
+                    alert("Amount must be > 0!");
                 }
             }
         }
 
-        // Delete Transaction
+        // 删除流水
         function deleteItem(id) {
             transactions = transactions.filter(item => item.id !== id);
             saveData();
         }
 
-        // Reset Filter (点击 Reset：更新到实时手机日期，并解除单日限制展示所有历史)
-        function clearFilter() {
-            let currentToday = getTodayStr();
-            document.getElementById('filter-date').value = currentToday;
-            document.getElementById('item-date').value = currentToday;
-            showAllHistory = true; // 开启显示全部历史
-            render();
+        // 核心重置按钮：强制抓取手机实时今天，并清空筛选看全部
+        function resetToToday() {
+            let realToday = getRealToday();
+            document.getElementById('filter-date').value = realToday;
+            document.getElementById('item-date').value = realToday;
+            render(true); // 传入 true 代表显示全部历史
         }
 
-        // Render Dashboard
-        function render() {
+        // 主渲染与余额计算
+        function render(showAll = false) {
             let listContainer = document.getElementById('transaction-list');
             let filterDate = document.getElementById('filter-date').value;
-            
             listContainer.innerHTML = '';
 
+            // 算总额
             let currentBalance = initialBalance;
-            transactions.forEach(item => {
-                if (item.type === 'gain') {
-                    currentBalance += item.amount;
-                } else {
-                    currentBalance -= item.amount;
-                }
+            transactions.forEach(t => {
+                if (t.type === 'gain') currentBalance += t.amount;
+                else currentBalance -= t.amount;
             });
 
+            // 显示总额
             let displayBalanceEl = document.getElementById('balance-display');
-            if (isMasked) {
-                displayBalanceEl.textContent = 'RM ••••••';
-            } else {
-                displayBalanceEl.textContent = `RM ${currentBalance.toFixed(2)}`;
-            }
+            displayBalanceEl.textContent = isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`;
 
-            // 筛选逻辑：如果点击了 Reset(showAllHistory=true)，则展示全部；否则按日期筛选
-            let filtered = showAllHistory ? transactions : (filterDate ? transactions.filter(item => item.date === filterDate) : transactions);
+            // 过滤渲染列表
+            let filtered = showAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);
 
             if (filtered.length === 0) {
                 listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records found</div>`;
@@ -284,9 +273,7 @@
                         <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
                             ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
                         </span>
-                        <!-- Edit Button -->
-                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit Amount">✏️</button>
-                        <!-- Delete Button -->
+                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit">✏️</button>
                         <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1" title="Delete">🗑️</button>
                     </div>
                 `;
@@ -297,10 +284,6 @@
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
         }
-
-        // 启动时检查跨月结转
-        checkMonthlyRollover();
-        render();
     </script>
 </body>
 </html>

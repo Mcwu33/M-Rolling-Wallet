@@ -75,6 +75,7 @@
             <div class="flex justify-between items-center">
                 <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
                 <div class="flex items-center space-x-1">
+                    <!-- 加上了 forceShowAll 参数，点 Reset 时显示全部历史记录，不再被单日死死卡住 -->
                     <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2.5 py-1.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
                     <button onclick="clearFilter()" class="text-xs text-gold-light dark:text-gold-dark px-1.5 py-1">Reset</button>
                 </div>
@@ -92,6 +93,7 @@
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
+        let showAllHistory = false; // 新增控制开关：Reset 后显示全部流水
 
         // 动态获取手机当前实时日期的函数
         function getTodayStr() {
@@ -102,12 +104,12 @@
         document.getElementById('item-date').value = getTodayStr();
         document.getElementById('filter-date').value = getTodayStr();
 
-        // 自动检测跨月结转逻辑 (Monthly Rollover Check)
+        // 自动检测跨月结转逻辑
         function checkMonthlyRollover() {
             if (transactions.length === 0) return;
 
             let todayStr = getTodayStr();
-            let currentYearMonth = todayStr.substring(0, 7); // 例如 "2026-11"
+            let currentYearMonth = todayStr.substring(0, 7);
             let lastCheckedMonth = localStorage.getItem('rw_last_month') || currentYearMonth;
 
             if (currentYearMonth > lastCheckedMonth) {
@@ -170,6 +172,7 @@
 
         // Calendar Date Sync
         function onFilterDateChange() {
+            showAllHistory = false; // 用户手动选日期时，取消显示全部
             let selectedDate = document.getElementById('filter-date').value;
             if (selectedDate) {
                 document.getElementById('item-date').value = selectedDate;
@@ -228,11 +231,12 @@
             saveData();
         }
 
-        // Reset Filter (点击 Reset 时，实时获取手机当前最新日期并同步)
+        // Reset Filter (点击 Reset：更新到实时手机日期，并解除单日限制展示所有历史)
         function clearFilter() {
             let currentToday = getTodayStr();
             document.getElementById('filter-date').value = currentToday;
             document.getElementById('item-date').value = currentToday;
+            showAllHistory = true; // 开启显示全部历史
             render();
         }
 
@@ -259,10 +263,11 @@
                 displayBalanceEl.textContent = `RM ${currentBalance.toFixed(2)}`;
             }
 
-            let filtered = filterDate ? transactions.filter(item => item.date === filterDate) : transactions;
+            // 筛选逻辑：如果点击了 Reset(showAllHistory=true)，则展示全部；否则按日期筛选
+            let filtered = showAllHistory ? transactions : (filterDate ? transactions.filter(item => item.date === filterDate) : transactions);
 
             if (filtered.length === 0) {
-                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records for this date</div>`;
+                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records found</div>`;
                 return;
             }
 

@@ -97,10 +97,55 @@
         document.getElementById('item-date').value = todayStr;
         document.getElementById('filter-date').value = todayStr;
 
+        // 自动检测跨月结转逻辑 (Monthly Rollover Check)
+        function checkMonthlyRollover() {
+            if (transactions.length === 0) return;
+
+            let currentYearMonth = todayStr.substring(0, 7); // 例如 "2026-11"
+            let lastCheckedMonth = localStorage.getItem('rw_last_month') || currentYearMonth;
+
+            // 如果发现当前系统月份 大于 上次记录的月份，说明跨月了！
+            if (currentYearMonth > lastCheckedMonth) {
+                // 计算上月底的总剩余资产
+                let prevBalance = initialBalance;
+                transactions.forEach(t => {
+                    if (t.date.startsWith(lastCheckedMonth)) {
+                        if (t.type === 'gain') prevBalance += t.amount;
+                        else prevBalance -= t.amount;
+                    }
+                });
+
+                if (prevBalance > 0) {
+                    let rolloverDate = currentYearMonth + "-01";
+                    // 检查是否已经生成过该月的结转，避免重复生成
+                    let exists = transactions.some(t => t.date === rolloverDate && t.name.includes("Previous Month Rollover"));
+                    if (!exists) {
+                        let rolloverItem = {
+                            id: Date.now(),
+                            name: `Previous Month Rollover (${lastCheckedMonth})`,
+                            amount: prevBalance,
+                            type: 'gain',
+                            date: rolloverDate
+                        };
+                        transactions.unshift(rolloverItem);
+                    }
+                }
+                localStorage.setItem('rw_last_month', currentYearMonth);
+                saveDataWithoutRolloverCheck();
+            } else {
+                localStorage.setItem('rw_last_month', currentYearMonth);
+            }
+        }
+
         function saveData() {
             localStorage.setItem('rw_initial', initialBalance);
             localStorage.setItem('rw_transactions', JSON.stringify(transactions));
             render();
+        }
+
+        function saveDataWithoutRolloverCheck() {
+            localStorage.setItem('rw_initial', initialBalance);
+            localStorage.setItem('rw_transactions', JSON.stringify(transactions));
         }
 
         // Edit Initial Balance
@@ -244,6 +289,8 @@
             document.documentElement.classList.toggle('dark');
         }
 
+        // 启动时检查跨月结转
+        checkMonthlyRollover();
         render();
     </script>
 </body>

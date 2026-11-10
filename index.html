@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rolling-wallet</title>
+    <title>Rolling-Wallet</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,7 +19,7 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 sm:p-6 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 transition-colors duration-300">
 
     <div class="max-w-md mx-auto space-y-4">
         
@@ -31,17 +31,17 @@
             </button>
         </div>
 
-        <!-- 头部资产总额面板 (优化按钮点击区域，绝对灵敏) -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
+        <!-- 头部资产总额看板 -->
+        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
             <div class="flex justify-between items-center">
                 <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance (剩余总额)</span>
-                <!-- 功能按钮区 -->
+                <!-- 眼睛与铅笔功能按钮 -->
                 <div class="flex items-center space-x-2">
-                    <button id="btn-mask" onclick="toggleMask()" class="px-3 py-1.5 bg-gold-light/10 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium border border-gold-light/30 active:scale-95 transition-transform">
-                        👁️ 隐藏/显示
+                    <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                        👁️ 隐藏
                     </button>
-                    <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/10 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium border border-gold-light/30 active:scale-95 transition-transform">
-                        ✏️ 设本金
+                    <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/20 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                        ✏️ 改本金
                     </button>
                 </div>
             </div>
@@ -51,7 +51,7 @@
         </div>
 
         <!-- 添加流水表单 -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
             <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">添加新流水</div>
             <input type="text" id="item-name" placeholder="项目名称 (e.g. 咖啡)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
             <div class="flex space-x-2">
@@ -61,7 +61,6 @@
                     <option value="gain">收入 (Gain +)</option>
                 </select>
             </div>
-            <!-- 日期选择 -->
             <div class="flex items-center space-x-2">
                 <span class="text-xs text-gray-400">日期:</span>
                 <input type="date" id="item-date" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
@@ -72,7 +71,7 @@
         </div>
 
         <!-- 📅 日历筛选与流水明细 -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
             <div class="flex justify-between items-center">
                 <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">流水明细与日历筛选</div>
                 <div class="flex items-center space-x-1">
@@ -88,9 +87,9 @@
 
     </div>
 
-    <!-- JavaScript 核心逻辑 -->
+    <!-- 纯净原生 JavaScript 逻辑 -->
     <script>
-        // 从 localStorage 读取数据
+        // 数据初始化
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
@@ -100,10 +99,11 @@
         document.getElementById('item-date').value = todayStr;
         document.getElementById('filter-date').value = todayStr;
 
+        // 保存并刷新
         function saveData() {
             localStorage.setItem('rw_initial', initialBalance);
             localStorage.setItem('rw_transactions', JSON.stringify(transactions));
-            renderTransactions();
+            render();
         }
 
         // 修改初始本金 (铅笔按钮)
@@ -118,25 +118,24 @@
         // 切换隐私遮挡 (眼睛按钮)
         function toggleMask() {
             isMasked = !isMasked;
-            let btn = document.getElementById('btn-mask');
-            btn.textContent = isMasked ? '🔒 显示金额' : '👁️ 隐藏/显示';
-            renderTransactions();
+            let btn = document.getElementById('eye-btn');
+            btn.textContent = isMasked ? '🔒 显示' : '👁️ 隐藏';
+            render();
         }
 
-        // 下方日历改变时，上方日期联动
+        // 下方日历变动时，上方日期自动联动
         function onFilterDateChange() {
             let selectedDate = document.getElementById('filter-date').value;
             if (selectedDate) {
                 document.getElementById('item-date').value = selectedDate;
             }
-            renderTransactions();
+            render();
         }
 
-        // 添加流水 (自动联动扣除或增加余额)
+        // 添加流水
         function addItem() {
             let name = document.getElementById('item-name').value.trim();
-            let amountStr = document.getElementById('item-amount').value;
-            let amount = parseFloat(amountStr);
+            let amount = parseFloat(document.getElementById('item-amount').value);
             let type = document.getElementById('item-type').value;
             let date = document.getElementById('item-date').value;
 
@@ -153,7 +152,7 @@
                 date: date || todayStr
             };
 
-            transactions.unshift(newItem); // 压入最新记录
+            transactions.unshift(newItem);
             
             // 清空输入框
             document.getElementById('item-name').value = '';
@@ -168,21 +167,21 @@
             saveData();
         }
 
-        // 清除日历筛选
+        // 重置筛选
         function clearFilter() {
             document.getElementById('filter-date').value = todayStr;
             document.getElementById('item-date').value = todayStr;
-            renderTransactions();
+            render();
         }
 
-        // 核心渲染与余额计算
-        function renderTransactions() {
+        // 核心渲染与计算
+        function render() {
             let listContainer = document.getElementById('transaction-list');
             let filterDate = document.getElementById('filter-date').value;
             
             listContainer.innerHTML = '';
 
-            // 动态计算总额：初始本金 + 所有收入(gain) - 所有支出(spend)
+            // 计算当前总额 = 初始本金 + 所有收入 - 所有支出
             let currentBalance = initialBalance;
             transactions.forEach(item => {
                 if (item.type === 'gain') {
@@ -192,7 +191,7 @@
                 }
             });
 
-            // 更新显示总额
+            // 渲染总额显示
             let displayBalanceEl = document.getElementById('balance-display');
             if (isMasked) {
                 displayBalanceEl.textContent = 'RM ••••••';
@@ -200,19 +199,16 @@
                 displayBalanceEl.textContent = `RM ${currentBalance.toFixed(2)}`;
             }
 
-            // 按日历筛选流水
-            let filteredList = transactions;
-            if (filterDate) {
-                filteredList = transactions.filter(item => item.date === filterDate);
-            }
+            // 根据日历筛选
+            let filtered = filterDate ? transactions.filter(item => item.date === filterDate) : transactions;
 
-            if (filteredList.length === 0) {
+            if (filtered.length === 0) {
                 listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">当天暂无流水记录</div>`;
                 return;
             }
 
-            // 生成明细列表
-            filteredList.forEach(item => {
+            // 渲染列表
+            filtered.forEach(item => {
                 let isGain = item.type === 'gain';
                 let div = document.createElement('div');
                 div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
@@ -232,18 +228,13 @@
             });
         }
 
-        // 日间/夜间模式切换
+        // 切换暗黑模式
         function toggleDarkMode() {
-            let html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-            } else {
-                html.classList.add('dark');
-            }
+            document.documentElement.classList.toggle('dark');
         }
 
-        // 初始化首次渲染
-        renderTransactions();
+        // 首次加载渲染
+        render();
     </script>
 </body>
 </html>

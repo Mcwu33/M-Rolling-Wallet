@@ -1,290 +1,348 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Rolling-Wallet</title>
-    
-    <!-- 纯内联金币图标 -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E💰%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E💰%3C/text%3E%3C/svg%3E">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        gold: { light: '#C5A059', dark: '#AA7C11' }
-                    }
-                }
-            }
+    <style>
+        body {
+            background-color: #7b5ea7;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
         }
-    </script>
+        .app-card {
+            background: rgba(60, 42, 90, 0.75);
+            backdrop-filter: blur(10px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .page-transition {
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        #pullRefreshIndicator {
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 transition-colors duration-300">
+<body class="flex flex-col h-screen justify-between max-w-md mx-auto text-white overflow-hidden">
 
-    <div class="max-w-md mx-auto space-y-4">
-        
-        <!-- Header: 已更新为 M-Rolling-Wallet -->
-        <div class="flex justify-between items-center px-1">
-            <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">M-Rolling-Wallet</h1>
-            <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
-                ☀️ / 🌙
-            </button>
-        </div>
-
-        <!-- Left Balance Dashboard -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="flex justify-between items-center">
-                <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance</span>
-                <div class="flex items-center space-x-2">
-                    <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
-                        👁️ Hide
-                    </button>
-                    <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/20 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium active:scale-95 transition-transform">
-                        ✏️ Set Base
-                    </button>
-                </div>
-            </div>
-            <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
-                RM 0.00
-            </div>
-        </div>
-
-        <!-- Add Transaction Form -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Add Transaction</div>
-            <input type="text" id="item-name" placeholder="Item Name (e.g. Coffee)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-            <div class="flex space-x-2">
-                <input type="number" id="item-amount" placeholder="Amount (e.g. 30)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                    <option value="spend">Spend (-)</option>
-                    <option value="gain">Gain (+)</option>
-                </select>
-            </div>
-            <div class="flex items-center space-x-2">
-                <span class="text-xs text-gray-400">Date:</span>
-                <input type="date" id="item-date" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
-            </div>
-            <button onclick="addItem()" class="w-full py-3.5 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
-                Confirm Add
-            </button>
-        </div>
-
-        <!-- Calendar Filter & History List -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="flex justify-between items-center">
-                <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
-                <div class="flex items-center space-x-2">
-                    <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
-                    <button onclick="showAllHistoryRecords()" class="text-xs bg-gold-light/20 text-gold-light dark:text-gold-dark px-2 py-1 rounded-lg font-medium active:scale-95 transition-transform">
-                        All
-                    </button>
-                    <button onclick="resetToToday()" class="text-xs text-gray-400 hover:text-gray-200 px-1 py-1">
-                        Today
-                    </button>
-                </div>
-            </div>
-            
-            <div id="transaction-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                <!-- Dynamic Items -->
-            </div>
-        </div>
-
+    <!-- 下拉刷新提示浮层 -->
+    <div id="pullRefreshIndicator" class="absolute top-0 left-0 right-0 z-50 flex items-center justify-center py-3 text-xs text-yellow-300 font-bold bg-purple-950/90 border-b border-yellow-400/30 shadow-lg -translate-y-full opacity-0 pointer-events-none">
+        <span id="pullRefreshText" class="flex items-center space-x-2">
+            <span>🔄</span> <span>下拉刷新钱包 (Release to Refresh)...</span>
+        </span>
     </div>
 
-    <!-- Core JavaScript -->
+    <!-- 主内容区域 -->
+    <div id="mainContent" class="flex-1 overflow-y-auto p-4 space-y-4 pb-20 page-transition relative"></div>
+
+    <!-- 底部导航栏 (两页：1. Wallet 记账盘口 / 2. Summary 财务总结) -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto app-card border-t border-purple-500/30 px-8 py-3 flex justify-around items-center z-30">
+        <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-yellow-300 transition">
+            <span class="text-xl">💰</span>
+            <span class="text-[10px] mt-1 font-semibold">Wallet</span>
+        </button>
+        <button onclick="switchPage(2)" id="navBtn2" class="flex flex-col items-center text-purple-300 hover:text-white transition">
+            <span class="text-xl">📊</span>
+            <span class="text-[10px] mt-1 font-semibold">Summary</span>
+        </button>
+    </div>
+
     <script>
-        let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
-        let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
-        let isMasked = false;
-        let viewingAll = true;
-
-        function getRealToday() {
-            let now = new Date();
-            let year = now.getFullYear();
-            let month = String(now.getMonth() + 1).padStart(2, '0');
-            let day = String(now.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        window.onload = function() {
-            let today = getRealToday();
-            document.getElementById('item-date').value = today;
-            checkMonthlyRollover();
-            render();
+        // --- 核心财务全局状态数据 ---
+        let walletState = {
+            currentPage: 1,
+            // 预设一些账目数据方便查看效果，你也可以随时清空
+            transactions: JSON.parse(localStorage.getItem('m_wallet_txs')) || [
+                { id: 1, title: "Monthly Rent", amount: 1200, category: "Rent", type: "expense", date: "2026-11-01" },
+                { id: 2, title: "Supermarket Groceries", amount: 480, category: "Food", type: "expense", date: "2026-11-03" },
+                { id: 3, title: "Restaurant Dining", amount: 320, category: "Food", type: "expense", date: "2026-11-05" },
+                { id: 4, title: "Electricity & Water", amount: 250, category: "Utilities", type: "expense", date: "2026-11-08" },
+                { id: 5, title: "New Sneakers", amount: 210, category: "Clothes", type: "expense", date: "2026-11-10" },
+                { id: 6, title: "Mobile Bill", amount: 150, category: "Phone", type: "expense", date: "2026-11-12" },
+                { id: 7, title: "Movie & Leisure", amount: 190, category: "Leisure", type: "expense", date: "2026-11-15" }
+            ]
         };
 
-        function saveData() {
-            localStorage.setItem('rw_initial', initialBalance);
-            localStorage.setItem('rw_transactions', JSON.stringify(transactions));
-            render();
+        function saveWalletState() {
+            localStorage.setItem('m_wallet_txs', JSON.stringify(walletState.transactions));
         }
 
-        function checkMonthlyRollover() {
-            if (transactions.length === 0) return;
-            let today = getRealToday();
-            let currentMonth = today.substring(0, 7);
-            let lastMonth = localStorage.getItem('rw_last_month') || currentMonth;
-
-            if (currentMonth > lastMonth) {
-                let prevBalance = initialBalance;
-                transactions.forEach(t => {
-                    if (t.date.startsWith(lastMonth)) {
-                        if (t.type === 'gain') prevBalance += t.amount;
-                        else prevBalance -= t.amount;
-                    }
-                });
-
-                if (prevBalance > 0) {
-                    let rolloverDate = currentMonth + "-01";
-                    let exists = transactions.some(t => t.date === rolloverDate && t.name.includes("Rollover"));
-                    if (!exists) {
-                        transactions.unshift({
-                            id: Date.now(),
-                            name: `Previous Month Rollover (${lastMonth})`,
-                            amount: prevBalance,
-                            type: 'gain',
-                            date: rolloverDate
-                        });
-                    }
+        function switchPage(page) {
+            walletState.currentPage = page;
+            for (let i = 1; i <= 2; i++) {
+                const btn = document.getElementById(`navBtn${i}`);
+                if (btn) {
+                    btn.className = i === page 
+                        ? "flex flex-col items-center text-yellow-300 transition" 
+                        : "flex flex-col items-center text-purple-300 hover:text-white transition";
                 }
-                localStorage.setItem('rw_last_month', currentMonth);
-                localStorage.setItem('rw_transactions', JSON.stringify(transactions));
-            } else {
-                localStorage.setItem('rw_last_month', currentMonth);
+            }
+            renderWallet();
+        }
+
+        function renderWallet() {
+            const container = document.getElementById('mainContent');
+            if (!container) return;
+            if (walletState.currentPage === 1) {
+                renderWalletDashboard(container);
+            } else if (walletState.currentPage === 2) {
+                renderWalletSummary(container);
             }
         }
 
-        function editInitialBalance() {
-            let val = prompt("Enter your initial base balance:", initialBalance);
-            if (val !== null && val.trim() !== "" && !isNaN(val)) {
-                initialBalance = parseFloat(val);
-                saveData();
-            }
+        // ================= PAGE 1: WALLET DASHBOARD (记账与明细) =================
+        function renderWalletDashboard(container) {
+            // 计算总支出
+            const totalExpense = walletState.transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + Number(t.amount), 0);
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center pt-1">
+                    <div>
+                        <h2 class="text-lg font-black tracking-wide text-yellow-300">💰 M-Rolling-Wallet</h2>
+                        <p class="text-[10px] text-purple-200">个人财务驾驶舱 • 资产流动控制台</p>
+                    </div>
+                    <button onclick="addTransaction()" class="bg-yellow-400 text-purple-950 font-black px-3.5 py-2 rounded-xl text-xs shadow-md active:scale-95 transition flex items-center space-x-1">
+                        <span>+ 记一笔</span>
+                    </button>
+                </div>
+
+                <!-- 总资产/总支出概览卡片 -->
+                <div class="app-card p-4 rounded-2xl border border-yellow-400/40 shadow-xl flex flex-col space-y-1">
+                    <span class="text-[10px] text-purple-300 font-semibold uppercase tracking-wider">November Total Expenses (本月总支出)</span>
+                    <div class="text-2xl font-black text-yellow-300">RM ${totalExpense.toLocaleString()}</div>
+                    <div class="text-[10px] text-purple-200 mt-1">💡 提示：点击底部 Summary 可查看环形分类占比图表</div>
+                </div>
+
+                <!-- 记账明细列表 -->
+                <div class="space-y-2 pb-16">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="text-xs font-bold tracking-wide">📋 Recent Transactions (近期账目)</h3>
+                        <span class="text-[10px] text-purple-300">共 ${walletState.transactions.length} 笔记录</span>
+                    </div>
+
+                    ${walletState.transactions.length === 0 ? '<p class="text-[11px] text-purple-300 text-center py-8">暂无账目记录，点击右上角记一笔开始 💰</p>' : ''}
+                    
+                    ${walletState.transactions.map(t => `
+                        <div class="app-card p-3 rounded-xl border border-purple-500/30 flex items-center justify-between shadow-sm">
+                            <div class="flex flex-col space-y-0.5 flex-1 mr-2">
+                                <span class="text-xs text-white font-bold">${t.title}</span>
+                                <div class="flex items-center space-x-2 text-[9px] text-purple-300">
+                                    <span class="bg-purple-950/60 px-2 py-0.5 rounded border border-purple-400/20 text-yellow-300">${t.category}</span>
+                                    <span>📅 ${t.date}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-black text-red-400">-RM ${Number(t.amount).toLocaleString()}</span>
+                                <button onclick="deleteTx(${t.id})" class="text-red-400 hover:text-red-300 text-xs p-1" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
-        function toggleMask() {
-            isMasked = !isMasked;
-            document.getElementById('eye-btn').textContent = isMasked ? '🔒 Show' : '👁️ Hide';
-            render();
-        }
-
-        function onFilterDateChange() {
-            viewingAll = false;
-            let selectedDate = document.getElementById('filter-date').value;
-            if (selectedDate) {
-                document.getElementById('item-date').value = selectedDate;
-            }
-            render();
-        }
-
-        function showAllHistoryRecords() {
-            viewingAll = true;
-            render();
-        }
-
-        function resetToToday() {
-            let realToday = getRealToday();
-            document.getElementById('filter-date').value = realToday;
-            document.getElementById('item-date').value = realToday;
-            viewingAll = false;
-            render();
-        }
-
-        function addItem() {
-            let name = document.getElementById('item-name').value.trim();
-            let amount = parseFloat(document.getElementById('item-amount').value);
-            let type = document.getElementById('item-type').value;
-            let date = document.getElementById('item-date').value;
-
-            if (!name || isNaN(amount) || amount <= 0) {
-                alert("Please enter a valid item name and amount > 0!");
-                return;
-            }
-
-            transactions.unshift({
+        function addTransaction() {
+            const title = prompt("请输入账目名称 (例如: Lunch / Rent):");
+            if (!title) return;
+            const amountStr = prompt("请输入金额 (RM):");
+            if (!amountStr || isNaN(amountStr)) return;
+            const category = prompt("请输入分类 (例如: Food, Rent, Utilities, Clothes, Leisure, Phone):", "Food");
+            
+            const newTx = {
                 id: Date.now(),
-                name,
-                amount,
-                type,
-                date: date || getRealToday()
-            });
+                title: title.trim(),
+                amount: parseFloat(amountStr),
+                category: category ? category.trim() : "Other",
+                type: "expense",
+                date: new Date().toISOString().split('T')[0]
+            };
 
-            document.getElementById('item-name').value = '';
-            document.getElementById('item-amount').value = '';
-            saveData();
+            walletState.transactions.unshift(newTx);
+            saveWalletState();
+            renderWallet();
         }
 
-        function editItemAmount(id) {
-            let item = transactions.find(t => t.id === id);
-            if (!item) return;
+        function deleteTx(id) {
+            walletState.transactions = walletState.transactions.filter(t => t.id !== id);
+            saveWalletState();
+            renderWallet();
+        }
 
-            let val = prompt(`Edit amount for "${item.name}":`, item.amount);
-            if (val !== null && val.trim() !== "" && !isNaN(val)) {
-                let newAmount = parseFloat(val);
-                if (newAmount > 0) {
-                    item.amount = newAmount;
-                    saveData();
-                } else {
-                    alert("Amount must be > 0!");
+
+        // ================= PAGE 2: SUMMARY (个人财务环形图总结) =================
+        function renderWalletSummary(container) {
+            // 1. 统计各个 category 的总金额
+            const categoryTotals = {};
+            let totalExpense = 0;
+
+            walletState.transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    const cat = t.category || 'Other';
+                    const amt = Number(t.amount);
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+                    totalExpense += amt;
                 }
-            }
-        }
-
-        function deleteItem(id) {
-            transactions = transactions.filter(item => item.id !== id);
-            saveData();
-        }
-
-        function render() {
-            let listContainer = document.getElementById('transaction-list');
-            let filterDate = document.getElementById('filter-date').value;
-            listContainer.innerHTML = '';
-
-            let currentBalance = initialBalance;
-            transactions.forEach(t => {
-                if (t.type === 'gain') currentBalance += t.amount;
-                else currentBalance -= t.amount;
             });
 
-            let displayBalanceEl = document.getElementById('balance-display');
-            displayBalanceEl.textContent = isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`;
+            // 转为数组并按金额从大到小排序
+            const sortedCategories = Object.keys(categoryTotals).map(cat => {
+                const amount = categoryTotals[cat];
+                const percentage = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
+                return { category: cat, amount, percentage };
+            }).sort((a, b) => b.amount - a.amount);
 
-            let filtered = viewingAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);
+            // 预设好看的分类配色 (对应你发的设计图风格)
+            const colors = ['#22d3ee', '#a8a29e', '#fbbf24', '#f97316', '#ef4444', '#ec4899', '#8b5cf6'];
 
-            if (filtered.length === 0) {
-                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records found</div>`;
+            // 构造 SVG 环形图 (Donut Chart) 的 conic-gradient 渐变角度
+            let cumulativePercent = 0;
+            let gradientStops = sortedCategories.map((item, index) => {
+                const start = cumulativePercent;
+                cumulativePercent += item.percentage;
+                const color = colors[index % colors.length];
+                return `${color} ${start}% ${cumulativePercent}%`;
+            });
+            const conicGradientStyle = gradientStops.length > 0 ? `conic-gradient(${gradientStops.join(', ')})` : 'conic-gradient(#4b3271 0% 100%)';
+
+            // 找出占比最高的主分类显示在环形图中央
+            const topCategory = sortedCategories.length > 0 ? sortedCategories[0].category : 'No Data';
+
+            container.innerHTML = `
+                <div class="text-center space-y-1 pt-1">
+                    <h2 class="text-lg font-black tracking-wide text-yellow-300">📊 Personal Accounting Summary</h2>
+                    <p class="text-[10px] text-purple-200">整月财务支出结构与品类占比分析</p>
+                </div>
+
+                <div class="space-y-5 pt-2 pb-16">
+                    <!-- 仿照图1设计的环形图卡片 -->
+                    <div class="app-card p-5 rounded-3xl border border-yellow-400/40 shadow-2xl flex flex-col items-center space-y-4">
+                        <div class="text-xs font-extrabold text-yellow-300 uppercase tracking-widest">PERSONAL ACCOUNTING</div>
+                        
+                        <!-- 环形图表容器 -->
+                        <div class="relative w-48 h-48 rounded-full flex items-center justify-center shadow-inner" style="background: ${conicGradientStyle};">
+                            <!-- 中间镂空形成 Donut 环形，显示中心大项 -->
+                            <div class="w-28 h-28 bg-[#3c2a5a] rounded-full flex flex-col items-center justify-center shadow-inner border border-purple-400/30">
+                                <span class="text-[10px] text-purple-300 font-semibold">Top Expense</span>
+                                <span class="text-xs font-black text-yellow-300 mt-0.5 truncate max-w-[90px] px-1">${topCategory}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-purple-200 font-medium">
+                            本月总支出: <b class="text-yellow-300">RM ${totalExpense.toLocaleString()}</b>
+                        </div>
+                    </div>
+
+                    <!-- 类似图中的明细清单（Item 1: RM 500 等） -->
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center px-1">
+                            <h3 class="text-xs font-bold text-yellow-300 uppercase tracking-widest">📌 Category Breakdown (品类明细)</h3>
+                            <span class="text-[10px] text-purple-300">按金额由高到低</span>
+                        </div>
+
+                        ${sortedCategories.length === 0 ? '<div class="app-card p-4 rounded-2xl text-center text-xs text-purple-300 border border-purple-400/30">暂无支出数据 📊</div>' : ''}
+
+                        ${sortedCategories.map((item, index) => {
+                            const badgeColor = colors[index % colors.length];
+                            return `
+                                <div class="app-card p-3.5 rounded-2xl border border-purple-400/30 flex items-center justify-between shadow-md">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${badgeColor};"></div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-white">${item.category}</span>
+                                            <span class="text-[9px] text-purple-300">占比全月 ${item.percentage}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs font-black text-yellow-300">RM ${item.amount.toLocaleString()}</div>
+                                        <div class="text-[9px] text-purple-300 font-semibold">${item.percentage}%</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ================= 左右 SWIPE 手势 + 下拉刷新 =================
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, false);
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleWalletSwipe();
+        }, false);
+
+        function handleWalletSwipe() {
+            const threshold = 50; 
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffY) > Math.abs(diffX) && diffY > 100 && window.scrollY === 0) {
+                triggerWalletRefresh();
                 return;
             }
 
-            filtered.forEach(item => {
-                let isGain = item.type === 'gain';
-                let div = document.createElement('div');
-                div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
-                div.innerHTML = `
-                    <div class="space-y-0.5">
-                        <div class="font-medium">${item.name}</div>
-                        <div class="text-[10px] text-gray-400">${item.date}</div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
-                            ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
-                        </span>
-                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit">✏️</button>
-                        <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1" title="Delete">🗑️</button>
-                    </div>
-                `;
-                listContainer.appendChild(div);
+            if (Math.abs(diffX) < threshold) return;
+            if (diffX < 0) {
+                if (walletState.currentPage < 2) switchPage(2);
+            } else {
+                if (walletState.currentPage > 1) switchPage(1);
+            }
+        }
+
+        const mainContainer = document.getElementById('mainContent');
+        let startY = 0;
+        if (mainContainer) {
+            mainContainer.addEventListener('touchstart', e => { startY = e.touches[0].pageY; });
+            mainContainer.addEventListener('touchend', e => {
+                if (mainContainer.scrollTop === 0 && (e.changedTouches[0].pageY - startY > 90)) {
+                    triggerWalletRefresh();
+                }
             });
         }
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
+        function triggerWalletRefresh() {
+            const indicator = document.getElementById('pullRefreshIndicator');
+            const textSpan = document.getElementById('pullRefreshText');
+            if (!indicator) return;
+            textSpan.innerHTML = `<span>⚡</span> <span>正在刷新钱包 (Refreshing)...</span>`;
+            indicator.style.transform = "translateY(0)";
+            indicator.style.opacity = "1";
+
+            setTimeout(() => {
+                renderWallet();
+                indicator.style.transform = "translateY(-100%)";
+                indicator.style.opacity = "0";
+                textSpan.innerHTML = `<span>🔄</span> <span>下拉刷新钱包 (Release to Refresh)...</span>`;
+            }, 600);
         }
+
+        // 自动归位 Wallet 首页监听
+        document.addEventListener("visibilitychange", function() {
+            if (!document.hidden) {
+                switchPage(1);
+            }
+        });
+
+        // 初始化渲染
+        renderWallet();
     </script>
 </body>
 </html>

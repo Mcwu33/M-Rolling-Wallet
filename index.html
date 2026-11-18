@@ -24,10 +24,6 @@
         }
     </script>
     <style>
-        .app-card {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(12px);
-        }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.99); }
             to { opacity: 1; transform: scale(1); }
@@ -37,14 +33,15 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen pb-24 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <div class="max-w-md mx-auto p-4 space-y-4 page-transition" id="mainContainer">
+    <!-- 主内容滚动区 -->
+    <div class="max-w-md mx-auto w-full p-4 space-y-4 pb-24 page-transition flex-1 overflow-y-auto" id="mainContainer">
         <!-- 动态渲染页面容器 -->
     </div>
 
     <!-- 底部双页导航栏 (Wallet 记账盘口 / Summary 环形图总结) -->
-    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-30 shadow-lg">
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-[#1E1E1E]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-40 shadow-2xl">
         <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-gold-light dark:text-gold-dark transition">
             <span class="text-xl">💰</span>
             <span class="text-[10px] mt-1 font-semibold">Wallet</span>
@@ -230,7 +227,7 @@
             document.documentElement.classList.toggle('dark');
         }
 
-        // ================= 统一渲染分发函数 =================
+        // ================= 渲染分发函数 =================
         function render() {
             const container = document.getElementById('mainContainer');
             if (!container) return;
@@ -316,7 +313,6 @@
                 </div>
             `;
 
-            // 渲染列表明细
             let listContainer = document.getElementById('transaction-list');
             let filterDate = document.getElementById('filter-date').value;
             let filtered = viewingAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);

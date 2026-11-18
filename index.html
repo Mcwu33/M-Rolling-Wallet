@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Rolling-Wallet</title>
     
     <!-- 纯内联金币图标 -->
@@ -23,81 +23,41 @@
             }
         }
     </script>
+    <style>
+        .app-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .page-transition {
+            animation: fadeIn 0.2s ease-in-out;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen pb-24 transition-colors duration-300">
 
-    <div class="max-w-md mx-auto space-y-4">
-        
-        <!-- Header: 已更新为 M-Rolling-Wallet -->
-        <div class="flex justify-between items-center px-1">
-            <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">M-Rolling-Wallet</h1>
-            <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
-                ☀️ / 🌙
-            </button>
-        </div>
+    <div class="max-w-md mx-auto p-4 space-y-4 page-transition" id="mainContainer">
+        <!-- 动态渲染页面容器 -->
+    </div>
 
-        <!-- Left Balance Dashboard -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="flex justify-between items-center">
-                <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance</span>
-                <div class="flex items-center space-x-2">
-                    <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
-                        👁️ Hide
-                    </button>
-                    <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/20 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium active:scale-95 transition-transform">
-                        ✏️ Set Base
-                    </button>
-                </div>
-            </div>
-            <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
-                RM 0.00
-            </div>
-        </div>
-
-        <!-- Add Transaction Form -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Add Transaction</div>
-            <input type="text" id="item-name" placeholder="Item Name (e.g. Coffee)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-            <div class="flex space-x-2">
-                <input type="number" id="item-amount" placeholder="Amount (e.g. 30)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                    <option value="spend">Spend (-)</option>
-                    <option value="gain">Gain (+)</option>
-                </select>
-            </div>
-            <div class="flex items-center space-x-2">
-                <span class="text-xs text-gray-400">Date:</span>
-                <input type="date" id="item-date" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
-            </div>
-            <button onclick="addItem()" class="w-full py-3.5 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
-                Confirm Add
-            </button>
-        </div>
-
-        <!-- Calendar Filter & History List -->
-        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
-            <div class="flex justify-between items-center">
-                <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
-                <div class="flex items-center space-x-2">
-                    <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
-                    <button onclick="showAllHistoryRecords()" class="text-xs bg-gold-light/20 text-gold-light dark:text-gold-dark px-2 py-1 rounded-lg font-medium active:scale-95 transition-transform">
-                        All
-                    </button>
-                    <button onclick="resetToToday()" class="text-xs text-gray-400 hover:text-gray-200 px-1 py-1">
-                        Today
-                    </button>
-                </div>
-            </div>
-            
-            <div id="transaction-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                <!-- Dynamic Items -->
-            </div>
-        </div>
-
+    <!-- 底部双页导航栏 (Wallet 记账盘口 / Summary 环形图总结) -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-30 shadow-lg">
+        <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-gold-light dark:text-gold-dark transition">
+            <span class="text-xl">💰</span>
+            <span class="text-[10px] mt-1 font-semibold">Wallet</span>
+        </button>
+        <button onclick="switchPage(2)" id="navBtn2" class="flex flex-col items-center text-gray-400 hover:text-gray-200 transition">
+            <span class="text-xl">📊</span>
+            <span class="text-[10px] mt-1 font-semibold">Summary</span>
+        </button>
     </div>
 
     <!-- Core JavaScript -->
     <script>
+        let currentPage = 1;
         let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
         let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
         let isMasked = false;
@@ -112,8 +72,6 @@
         }
 
         window.onload = function() {
-            let today = getRealToday();
-            document.getElementById('item-date').value = today;
             checkMonthlyRollover();
             render();
         };
@@ -121,6 +79,19 @@
         function saveData() {
             localStorage.setItem('rw_initial', initialBalance);
             localStorage.setItem('rw_transactions', JSON.stringify(transactions));
+            render();
+        }
+
+        function switchPage(page) {
+            currentPage = page;
+            for (let i = 1; i <= 2; i++) {
+                const btn = document.getElementById(`navBtn${i}`);
+                if (btn) {
+                    btn.className = i === page 
+                        ? "flex flex-col items-center text-gold-light dark:text-gold-dark transition" 
+                        : "flex flex-col items-center text-gray-400 hover:text-gray-200 transition";
+                }
+            }
             render();
         }
 
@@ -148,7 +119,8 @@
                             name: `Previous Month Rollover (${lastMonth})`,
                             amount: prevBalance,
                             type: 'gain',
-                            date: rolloverDate
+                            date: rolloverDate,
+                            category: 'Rollover'
                         });
                     }
                 }
@@ -169,15 +141,17 @@
 
         function toggleMask() {
             isMasked = !isMasked;
-            document.getElementById('eye-btn').textContent = isMasked ? '🔒 Show' : '👁️ Hide';
+            let btn = document.getElementById('eye-btn');
+            if(btn) btn.textContent = isMasked ? '🔒 Show' : '👁️ Hide';
             render();
         }
 
         function onFilterDateChange() {
             viewingAll = false;
-            let selectedDate = document.getElementById('filter-date').value;
-            if (selectedDate) {
-                document.getElementById('item-date').value = selectedDate;
+            let filterDateEl = document.getElementById('filter-date');
+            let itemDateEl = document.getElementById('item-date');
+            if (filterDateEl && itemDateEl && filterDateEl.value) {
+                itemDateEl.value = filterDateEl.value;
             }
             render();
         }
@@ -189,17 +163,28 @@
 
         function resetToToday() {
             let realToday = getRealToday();
-            document.getElementById('filter-date').value = realToday;
-            document.getElementById('item-date').value = realToday;
+            let filterDateEl = document.getElementById('filter-date');
+            let itemDateEl = document.getElementById('item-date');
+            if (filterDateEl) filterDateEl.value = realToday;
+            if (itemDateEl) itemDateEl.value = realToday;
             viewingAll = false;
             render();
         }
 
         function addItem() {
-            let name = document.getElementById('item-name').value.trim();
-            let amount = parseFloat(document.getElementById('item-amount').value);
-            let type = document.getElementById('item-type').value;
-            let date = document.getElementById('item-date').value;
+            let nameInput = document.getElementById('item-name');
+            let amountInput = document.getElementById('item-amount');
+            let typeInput = document.getElementById('item-type');
+            let dateInput = document.getElementById('item-date');
+            let categoryInput = document.getElementById('item-category');
+
+            if (!nameInput || !amountInput) return;
+
+            let name = nameInput.value.trim();
+            let amount = parseFloat(amountInput.value);
+            let type = typeInput ? typeInput.value : 'spend';
+            let date = dateInput ? dateInput.value : getRealToday();
+            let category = categoryInput ? categoryInput.value.trim() : 'General';
 
             if (!name || isNaN(amount) || amount <= 0) {
                 alert("Please enter a valid item name and amount > 0!");
@@ -211,11 +196,12 @@
                 name,
                 amount,
                 type,
-                date: date || getRealToday()
+                date: date || getRealToday(),
+                category: category || 'General'
             });
 
-            document.getElementById('item-name').value = '';
-            document.getElementById('item-amount').value = '';
+            nameInput.value = '';
+            amountInput.value = '';
             saveData();
         }
 
@@ -240,20 +226,99 @@
             saveData();
         }
 
-        function render() {
-            let listContainer = document.getElementById('transaction-list');
-            let filterDate = document.getElementById('filter-date').value;
-            listContainer.innerHTML = '';
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
 
+        // ================= 统一渲染分发函数 =================
+        function render() {
+            const container = document.getElementById('mainContainer');
+            if (!container) return;
+
+            if (currentPage === 1) {
+                renderWalletDashboard(container);
+            } else if (currentPage === 2) {
+                renderWalletSummary(container);
+            }
+        }
+
+        // ================= PAGE 1: WALLET DASHBOARD =================
+        function renderWalletDashboard(container) {
             let currentBalance = initialBalance;
             transactions.forEach(t => {
                 if (t.type === 'gain') currentBalance += t.amount;
                 else currentBalance -= t.amount;
             });
 
-            let displayBalanceEl = document.getElementById('balance-display');
-            displayBalanceEl.textContent = isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`;
+            let filterDateVal = document.getElementById('filter-date') ? document.getElementById('filter-date').value : getRealToday();
+            let todayDefault = document.getElementById('item-date') ? document.getElementById('item-date').value : getRealToday();
 
+            container.innerHTML = `
+                <!-- Header -->
+                <div class="flex justify-between items-center px-1">
+                    <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">M-Rolling-Wallet</h1>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">☀️ / 🌙</button>
+                    </div>
+                </div>
+
+                <!-- Left Balance Dashboard -->
+                <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance</span>
+                        <div class="flex items-center space-x-2">
+                            <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                                ${isMasked ? '🔒 Show' : '👁️ Hide'}
+                            </button>
+                            <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/20 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                                ✏️ Set Base
+                            </button>
+                        </div>
+                    </div>
+                    <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
+                        ${isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`}
+                    </div>
+                </div>
+
+                <!-- Add Transaction Form -->
+                <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+                    <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Add Transaction</div>
+                    <input type="text" id="item-name" placeholder="Item Name (e.g. Coffee)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                    <input type="text" id="item-category" placeholder="Category (e.g. Food, Rent, Leisure)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light" value="Food">
+                    <div class="flex space-x-2">
+                        <input type="number" id="item-amount" placeholder="Amount (e.g. 30)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                        <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                            <option value="spend">Spend (-)</option>
+                            <option value="gain">Gain (+)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-400">Date:</span>
+                        <input type="date" id="item-date" value="${todayDefault}" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
+                    </div>
+                    <button onclick="addItem()" class="w-full py-3.5 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
+                        Confirm Add
+                    </button>
+                </div>
+
+                <!-- Calendar Filter & History List -->
+                <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
+                        <div class="flex items-center space-x-2">
+                            <input type="date" id="filter-date" value="${filterDateVal}" onchange="onFilterDateChange()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
+                            <button onclick="showAllHistoryRecords()" class="text-xs bg-gold-light/20 text-gold-light dark:text-gold-dark px-2 py-1 rounded-lg font-medium active:scale-95 transition-transform">All</button>
+                            <button onclick="resetToToday()" class="text-xs text-gray-400 hover:text-gray-200 px-1 py-1">Today</button>
+                        </div>
+                    </div>
+                    
+                    <div id="transaction-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+            `;
+
+            // 渲染列表明细
+            let listContainer = document.getElementById('transaction-list');
+            let filterDate = document.getElementById('filter-date').value;
             let filtered = viewingAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);
 
             if (filtered.length === 0) {
@@ -267,7 +332,7 @@
                 div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
                 div.innerHTML = `
                     <div class="space-y-0.5">
-                        <div class="font-medium">${item.name}</div>
+                        <div class="font-medium">${item.name} <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-400">${item.category || 'General'}</span></div>
                         <div class="text-[10px] text-gray-400">${item.date}</div>
                     </div>
                     <div class="flex items-center space-x-2">
@@ -282,8 +347,89 @@
             });
         }
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
+        // ================= PAGE 2: SUMMARY (品类环形图总结页) =================
+        function renderWalletSummary(container) {
+            let categoryTotals = {};
+            let totalExpense = 0;
+
+            transactions.forEach(t => {
+                if (t.type === 'spend') {
+                    let cat = t.category || 'General';
+                    let amt = Number(t.amount);
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+                    totalExpense += amt;
+                }
+            });
+
+            let sortedCategories = Object.keys(categoryTotals).map(cat => {
+                let amount = categoryTotals[cat];
+                let percentage = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
+                return { category: cat, amount, percentage };
+            }).sort((a, b) => b.amount - a.amount);
+
+            let colors = ['#C5A059', '#38bdf8', '#f97316', '#ef4444', '#a8a29e', '#ec4899', '#8b5cf6'];
+            let cumulativePercent = 0;
+            let gradientStops = sortedCategories.map((item, index) => {
+                let start = cumulativePercent;
+                cumulativePercent += item.percentage;
+                let color = colors[index % colors.length];
+                return `${color} ${start}% ${cumulativePercent}%`;
+            });
+            let conicGradientStyle = gradientStops.length > 0 ? `conic-gradient(${gradientStops.join(', ')})` : 'conic-gradient(#2A2A2A 0% 100%)';
+            let topCategory = sortedCategories.length > 0 ? sortedCategories[0].category : 'No Data';
+
+            container.innerHTML = `
+                <div class="text-center space-y-1 pt-1">
+                    <h2 class="text-lg font-bold tracking-wider text-gold-light dark:text-gold-dark">PERSONAL ACCOUNTING</h2>
+                    <p class="text-[10px] text-gray-400">Monthly Expense Structure & Breakdown</p>
+                </div>
+
+                <!-- 环形图卡片 -->
+                <div class="bg-white dark:bg-[#1E1E1E] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col items-center space-y-4">
+                    <div class="text-xs font-bold text-gold-light dark:text-gold-dark uppercase tracking-widest">EXPENSE STRUCTURE</div>
+                    
+                    <div class="relative w-48 h-48 rounded-full flex items-center justify-center shadow-inner" style="background: ${conicGradientStyle};">
+                        <div class="w-28 h-28 bg-gray-50 dark:bg-[#121212] rounded-full flex flex-col items-center justify-center shadow-inner border border-gray-200 dark:border-gray-800">
+                            <span class="text-[10px] text-gray-400 font-semibold">Top Expense</span>
+                            <span class="text-xs font-bold text-gold-light dark:text-gold-dark mt-0.5 truncate max-w-[90px] px-1">${topCategory}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-gray-400 font-medium">
+                        Total Spends: <b class="text-gold-light dark:text-gold-dark">RM ${totalExpense.toFixed(2)}</b>
+                    </div>
+                </div>
+
+                <!-- 品类明细列表 -->
+                <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Category Breakdown</div>
+                        <span class="text-[10px] text-gray-400">Sorted by amount</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        ${sortedCategories.length === 0 ? '<div class="text-center py-4 text-xs text-gray-400">No spend records found</div>' : ''}
+                        ${sortedCategories.map((item, index) => {
+                            let badgeColor = colors[index % colors.length];
+                            return `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${badgeColor};"></div>
+                                        <div class="flex flex-col">
+                                            <span class="font-medium">${item.category}</span>
+                                            <span class="text-[9px] text-gray-400">${item.percentage}% of total</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-semibold text-red-500">-RM ${item.amount.toFixed(2)}</div>
+                                        <div class="text-[9px] text-gray-400">${item.percentage}%</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>

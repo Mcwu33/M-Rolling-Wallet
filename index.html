@@ -35,18 +35,18 @@
 </head>
 <body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <!-- 主内容滚动区 -->
-    <div class="max-w-md mx-auto w-full p-4 space-y-4 pb-24 page-transition flex-1 overflow-y-auto" id="mainContainer">
+    <!-- 主内容滚动区 (留出底部导航栏的空间 pb-28) -->
+    <div class="max-w-md mx-auto w-full p-4 space-y-4 pb-28 page-transition flex-1 overflow-y-auto" id="mainContainer">
         <!-- 动态渲染页面容器 -->
     </div>
 
-    <!-- 底部双页导航栏 (Wallet 记账盘口 / Summary 环形图总结) -->
-    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-[#1E1E1E]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-40 shadow-2xl">
-        <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-gold-light dark:text-gold-dark transition">
+    <!-- 🔥 绝对固定在底部的双页导航栏 (Wallet 记账盘口 / Summary 环形图总结) -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-[#1E1E1E]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-50 shadow-2xl">
+        <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-gold-light dark:text-gold-dark transition active:scale-95">
             <span class="text-xl">💰</span>
             <span class="text-[10px] mt-1 font-semibold">Wallet</span>
         </button>
-        <button onclick="switchPage(2)" id="navBtn2" class="flex flex-col items-center text-gray-400 hover:text-gray-200 transition">
+        <button onclick="switchPage(2)" id="navBtn2" class="flex flex-col items-center text-gray-400 hover:text-gray-200 transition active:scale-95">
             <span class="text-xl">📊</span>
             <span class="text-[10px] mt-1 font-semibold">Summary</span>
         </button>
@@ -85,8 +85,8 @@
                 const btn = document.getElementById(`navBtn${i}`);
                 if (btn) {
                     btn.className = i === page 
-                        ? "flex flex-col items-center text-gold-light dark:text-gold-dark transition" 
-                        : "flex flex-col items-center text-gray-400 hover:text-gray-200 transition";
+                        ? "flex flex-col items-center text-gold-light dark:text-gold-dark transition active:scale-95" 
+                        : "flex flex-col items-center text-gray-400 hover:text-gray-200 transition active:scale-95";
                 }
             }
             render();

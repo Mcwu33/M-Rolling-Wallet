@@ -1,101 +1,290 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Rolling-Wallet (Initial Version)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background-color: #0f172a;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .wallet-card {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-    </style>
-</head>
-<body class="flex flex-col h-screen justify-between max-w-md mx-auto text-white p-4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Rolling-Wallet</title>
+    
+    <!-- 纯内联金币图标 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E💰%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E💰%3C/text%3E%3C/svg%3E">
 
-    <!-- 顶部资产驾驶舱 -->
-    <div class="space-y-4">
-        <div class="flex justify-between items-center pt-1">
-            <div>
-                <h2 class="text-lg font-black tracking-wide text-sky-400">M-Rolling-Wallet</h2>
-                <p class="text-[10px] text-slate-400">Initial Minimalist Ledger</p>
-            </div>
-            <button onclick="addRecord()" class="bg-sky-400 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs shadow-md active:scale-95 transition">
-                + 记一笔
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { light: '#C5A059', dark: '#AA7C11' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen p-4 transition-colors duration-300">
+
+    <div class="max-w-md mx-auto space-y-4">
+        
+        <!-- Header: 已更新为 M-Rolling-Wallet -->
+        <div class="flex justify-between items-center px-1">
+            <h1 class="text-xl font-bold tracking-wider text-gold-light dark:text-gold-dark">M-Rolling-Wallet</h1>
+            <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full">
+                ☀️ / 🌙
             </button>
         </div>
 
-        <!-- 总支出概览卡片 -->
-        <div class="wallet-card p-4 rounded-2xl shadow-xl flex flex-col space-y-1 border border-sky-500/30">
-            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total Expenses (总支出)</span>
-            <div id="totalDisplay" class="text-2xl font-black text-sky-400">RM 0</div>
+        <!-- Left Balance Dashboard -->
+        <div class="bg-white dark:bg-[#1E1E1E] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-400 uppercase tracking-wider">Left Balance</span>
+                <div class="flex items-center space-x-2">
+                    <button id="eye-btn" onclick="toggleMask()" class="px-3 py-1.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                        👁️ Hide
+                    </button>
+                    <button onclick="editInitialBalance()" class="px-3 py-1.5 bg-gold-light/20 dark:bg-gold-dark/20 text-gold-light dark:text-gold-dark rounded-xl text-xs font-medium active:scale-95 transition-transform">
+                        ✏️ Set Base
+                    </button>
+                </div>
+            </div>
+            <div id="balance-display" class="text-3xl font-bold text-gold-light dark:text-gold-dark">
+                RM 0.00
+            </div>
         </div>
 
-        <!-- 流水账明细列表 -->
-        <div class="space-y-2">
-            <h3 class="text-xs font-bold tracking-wide text-slate-200">📋 Transactions (流水明细)</h3>
-            <div id="recordList" class="space-y-2"></div>
+        <!-- Add Transaction Form -->
+        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+            <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Add Transaction</div>
+            <input type="text" id="item-name" placeholder="Item Name (e.g. Coffee)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+            <div class="flex space-x-2">
+                <input type="number" id="item-amount" placeholder="Amount (e.g. 30)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
+                    <option value="spend">Spend (-)</option>
+                    <option value="gain">Gain (+)</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs text-gray-400">Date:</span>
+                <input type="date" id="item-date" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm">
+            </div>
+            <button onclick="addItem()" class="w-full py-3.5 bg-gold-light dark:bg-gold-dark text-white rounded-xl font-medium text-sm shadow-md active:scale-95 transition-transform">
+                Confirm Add
+            </button>
         </div>
+
+        <!-- Calendar Filter & History List -->
+        <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
+            <div class="flex justify-between items-center">
+                <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">History & Calendar</div>
+                <div class="flex items-center space-x-2">
+                    <input type="date" id="filter-date" onchange="onFilterDateChange()" class="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-xs border-none">
+                    <button onclick="showAllHistoryRecords()" class="text-xs bg-gold-light/20 text-gold-light dark:text-gold-dark px-2 py-1 rounded-lg font-medium active:scale-95 transition-transform">
+                        All
+                    </button>
+                    <button onclick="resetToToday()" class="text-xs text-gray-400 hover:text-gray-200 px-1 py-1">
+                        Today
+                    </button>
+                </div>
+            </div>
+            
+            <div id="transaction-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <!-- Dynamic Items -->
+            </div>
+        </div>
+
     </div>
 
+    <!-- Core JavaScript -->
     <script>
-        // 初代最简数据状态
-        let records = JSON.parse(localStorage.getItem('initial_wallet_records')) || [];
+        let initialBalance = parseFloat(localStorage.getItem('rw_initial')) || 0;
+        let transactions = JSON.parse(localStorage.getItem('rw_transactions')) || [];
+        let isMasked = false;
+        let viewingAll = true;
 
-        function saveRecords() {
-            localStorage.setItem('initial_wallet_records', JSON.stringify(records));
+        function getRealToday() {
+            let now = new Date();
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, '0');
+            let day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        window.onload = function() {
+            let today = getRealToday();
+            document.getElementById('item-date').value = today;
+            checkMonthlyRollover();
+            render();
+        };
+
+        function saveData() {
+            localStorage.setItem('rw_initial', initialBalance);
+            localStorage.setItem('rw_transactions', JSON.stringify(transactions));
+            render();
+        }
+
+        function checkMonthlyRollover() {
+            if (transactions.length === 0) return;
+            let today = getRealToday();
+            let currentMonth = today.substring(0, 7);
+            let lastMonth = localStorage.getItem('rw_last_month') || currentMonth;
+
+            if (currentMonth > lastMonth) {
+                let prevBalance = initialBalance;
+                transactions.forEach(t => {
+                    if (t.date.startsWith(lastMonth)) {
+                        if (t.type === 'gain') prevBalance += t.amount;
+                        else prevBalance -= t.amount;
+                    }
+                });
+
+                if (prevBalance > 0) {
+                    let rolloverDate = currentMonth + "-01";
+                    let exists = transactions.some(t => t.date === rolloverDate && t.name.includes("Rollover"));
+                    if (!exists) {
+                        transactions.unshift({
+                            id: Date.now(),
+                            name: `Previous Month Rollover (${lastMonth})`,
+                            amount: prevBalance,
+                            type: 'gain',
+                            date: rolloverDate
+                        });
+                    }
+                }
+                localStorage.setItem('rw_last_month', currentMonth);
+                localStorage.setItem('rw_transactions', JSON.stringify(transactions));
+            } else {
+                localStorage.setItem('rw_last_month', currentMonth);
+            }
+        }
+
+        function editInitialBalance() {
+            let val = prompt("Enter your initial base balance:", initialBalance);
+            if (val !== null && val.trim() !== "" && !isNaN(val)) {
+                initialBalance = parseFloat(val);
+                saveData();
+            }
+        }
+
+        function toggleMask() {
+            isMasked = !isMasked;
+            document.getElementById('eye-btn').textContent = isMasked ? '🔒 Show' : '👁️ Hide';
+            render();
+        }
+
+        function onFilterDateChange() {
+            viewingAll = false;
+            let selectedDate = document.getElementById('filter-date').value;
+            if (selectedDate) {
+                document.getElementById('item-date').value = selectedDate;
+            }
+            render();
+        }
+
+        function showAllHistoryRecords() {
+            viewingAll = true;
+            render();
+        }
+
+        function resetToToday() {
+            let realToday = getRealToday();
+            document.getElementById('filter-date').value = realToday;
+            document.getElementById('item-date').value = realToday;
+            viewingAll = false;
+            render();
+        }
+
+        function addItem() {
+            let name = document.getElementById('item-name').value.trim();
+            let amount = parseFloat(document.getElementById('item-amount').value);
+            let type = document.getElementById('item-type').value;
+            let date = document.getElementById('item-date').value;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid item name and amount > 0!");
+                return;
+            }
+
+            transactions.unshift({
+                id: Date.now(),
+                name,
+                amount,
+                type,
+                date: date || getRealToday()
+            });
+
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-amount').value = '';
+            saveData();
+        }
+
+        function editItemAmount(id) {
+            let item = transactions.find(t => t.id === id);
+            if (!item) return;
+
+            let val = prompt(`Edit amount for "${item.name}":`, item.amount);
+            if (val !== null && val.trim() !== "" && !isNaN(val)) {
+                let newAmount = parseFloat(val);
+                if (newAmount > 0) {
+                    item.amount = newAmount;
+                    saveData();
+                } else {
+                    alert("Amount must be > 0!");
+                }
+            }
+        }
+
+        function deleteItem(id) {
+            transactions = transactions.filter(item => item.id !== id);
+            saveData();
         }
 
         function render() {
-            const listContainer = document.getElementById('recordList');
-            const totalDisplay = document.getElementById('totalDisplay');
+            let listContainer = document.getElementById('transaction-list');
+            let filterDate = document.getElementById('filter-date').value;
+            listContainer.innerHTML = '';
 
-            let total = 0;
-            if (records.length === 0) {
-                listContainer.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-6">暂无记录，点击右上角开始记账</p>`;
-            } else {
-                listContainer.innerHTML = records.map(r => {
-                    total += Number(r.amount);
-                    return `
-                        <div class="wallet-card p-3 rounded-xl flex items-center justify-between shadow-sm border border-slate-700/60">
-                            <span class="text-xs font-bold text-white">${r.title}</span>
-                            <div class="flex items-center space-x-3">
-                                <span class="text-xs font-black text-rose-400">-RM ${r.amount}</span>
-                                <button onclick="deleteRecord(${r.id})" class="text-slate-400 hover:text-rose-400 text-xs">🗑️</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+            let currentBalance = initialBalance;
+            transactions.forEach(t => {
+                if (t.type === 'gain') currentBalance += t.amount;
+                else currentBalance -= t.amount;
+            });
+
+            let displayBalanceEl = document.getElementById('balance-display');
+            displayBalanceEl.textContent = isMasked ? 'RM ••••••' : `RM ${currentBalance.toFixed(2)}`;
+
+            let filtered = viewingAll ? transactions : (filterDate ? transactions.filter(t => t.date === filterDate) : transactions);
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-400">No records found</div>`;
+                return;
             }
-            totalDisplay.innerText = `RM ${total.toLocaleString()}`;
+
+            filtered.forEach(item => {
+                let isGain = item.type === 'gain';
+                let div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
+                div.innerHTML = `
+                    <div class="space-y-0.5">
+                        <div class="font-medium">${item.name}</div>
+                        <div class="text-[10px] text-gray-400">${item.date}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
+                            ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
+                        </span>
+                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit">✏️</button>
+                        <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1" title="Delete">🗑️</button>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
         }
 
-        function addRecord() {
-            const title = prompt("请输入账目名称:");
-            if (!title) return;
-            const amount = prompt("请输入金额 (RM):");
-            if (!amount || isNaN(amount)) return;
-
-            records.unshift({ id: Date.now(), title: title.trim(), amount: parseFloat(amount) });
-            saveRecords();
-            render();
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
         }
-
-        function deleteRecord(id) {
-            records = records.filter(r => r.id !== id);
-            saveRecords();
-            render();
-        }
-
-        render();
     </script>
 </body>
 </html>

@@ -31,16 +31,20 @@
         .page-transition {
             animation: fadeIn 0.2s ease-in-out;
         }
+        /* 隐藏默认下拉小箭头但保留记忆联想功能 */
+        input::-webkit-calendar-picker-indicator {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-gray-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <!-- 主内容滚动区 (留出底部导航栏的空间 pb-28) -->
+    <!-- 主内容滚动区 -->
     <div class="max-w-md mx-auto w-full p-4 space-y-4 pb-28 page-transition flex-1 overflow-y-auto" id="mainContainer">
         <!-- 动态渲染页面容器 -->
     </div>
 
-    <!-- 🔥 绝对固定在底部的双页导航栏 (Wallet 记账盘口 / Summary 环形图总结) -->
+    <!-- 底部固定双页导航栏 -->
     <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-[#1E1E1E]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-8 py-3 flex justify-around items-center z-50 shadow-2xl">
         <button onclick="switchPage(1)" id="navBtn1" class="flex flex-col items-center text-gold-light dark:text-gold-dark transition active:scale-95">
             <span class="text-xl">💰</span>
@@ -77,6 +81,15 @@
             localStorage.setItem('rw_initial', initialBalance);
             localStorage.setItem('rw_transactions', JSON.stringify(transactions));
             render();
+        }
+
+        // 获取所有用过的 Category 列表（用于记忆联想）
+        function getExistingCategories() {
+            let cats = new Set(['Food', 'Rent', 'Utilities', 'Clothes', 'Leisure', 'Phone', 'General']);
+            transactions.forEach(t => {
+                if (t.category) cats.add(t.category);
+            });
+            return Array.from(cats);
         }
 
         function switchPage(page) {
@@ -202,7 +215,8 @@
             saveData();
         }
 
-        function editItemAmount(id) {
+        // 图 1 优化：编辑金额时，顺便弹出修改 Category
+        function editItemDetails(id) {
             let item = transactions.find(t => t.id === id);
             if (!item) return;
 
@@ -211,6 +225,13 @@
                 let newAmount = parseFloat(val);
                 if (newAmount > 0) {
                     item.amount = newAmount;
+                    
+                    // 顺便弹出修改 Category
+                    let newCat = prompt(`Edit category for "${item.name}" (History memory categories available):`, item.category || 'General');
+                    if (newCat !== null && newCat.trim() !== "") {
+                        item.category = newCat.trim();
+                    }
+
                     saveData();
                 } else {
                     alert("Amount must be > 0!");
@@ -227,7 +248,6 @@
             document.documentElement.classList.toggle('dark');
         }
 
-        // ================= 渲染分发函数 =================
         function render() {
             const container = document.getElementById('mainContainer');
             if (!container) return;
@@ -249,6 +269,7 @@
 
             let filterDateVal = document.getElementById('filter-date') ? document.getElementById('filter-date').value : getRealToday();
             let todayDefault = document.getElementById('item-date') ? document.getElementById('item-date').value : getRealToday();
+            let memoryCategories = getExistingCategories();
 
             container.innerHTML = `
                 <!-- Header -->
@@ -277,11 +298,19 @@
                     </div>
                 </div>
 
-                <!-- Add Transaction Form -->
+                <!-- Add Transaction Form (图 2：带 Memory 记忆功能的 Category 输入框) -->
                 <div class="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-3">
                     <div class="font-medium text-xs text-gray-400 uppercase tracking-wider">Add Transaction</div>
                     <input type="text" id="item-name" placeholder="Item Name (e.g. Coffee)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
-                    <input type="text" id="item-category" placeholder="Category (e.g. Food, Rent, Leisure)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light" value="Food">
+                    
+                    <!-- 记忆联想输入框 -->
+                    <div>
+                        <input type="text" id="item-category" list="category-history" placeholder="Category (e.g. Food, Rent)" class="w-full px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light" value="Food">
+                        <datalist id="category-history">
+                            ${memoryCategories.map(cat => `<option value="${cat}">`).join('')}
+                        </datalist>
+                    </div>
+
                     <div class="flex space-x-2">
                         <input type="number" id="item-amount" placeholder="Amount (e.g. 30)" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
                         <select id="item-type" class="w-1/2 px-3 py-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl border-none text-sm focus:ring-2 focus:ring-gold-light">
@@ -328,14 +357,14 @@
                 div.className = "flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-xl text-sm";
                 div.innerHTML = `
                     <div class="space-y-0.5">
-                        <div class="font-medium">${item.name} <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-400">${item.category || 'General'}</span></div>
+                        <div class="font-medium">${item.name} <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gold-light dark:text-gold-dark">${item.category || 'General'}</span></div>
                         <div class="text-[10px] text-gray-400">${item.date}</div>
                     </div>
                     <div class="flex items-center space-x-2">
                         <span class="font-semibold ${isGain ? 'text-green-500' : 'text-red-500'}">
                             ${isGain ? '+' : '-'}RM ${item.amount.toFixed(2)}
                         </span>
-                        <button onclick="editItemAmount(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit">✏️</button>
+                        <button onclick="editItemDetails(${item.id})" class="text-gray-400 hover:text-gold-light text-xs p-1" title="Edit Amount & Category">✏️</button>
                         <button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 text-xs p-1" title="Delete">🗑️</button>
                     </div>
                 `;
